@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Review Sentiment Analysis</title>
+    <link rel="stylesheet" href="./styles.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-block;
+            margin: 0 10px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #sentimentGraph {
+            display: block;
+            margin: 20px auto;
+            max-width: 100%;
+            animation: zoomIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes zoomIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mobile Review Sentiment Analysis</h1>
+        <label for="brand">Select Mobile Brand:</label>
+        <select id="brand">
+            <option value="Samsung">Samsung</option>
+            <option value="Apple">Apple</option>
+            <option value="Google">Google</option>
+            <!-- Add more options as needed -->
+        </select>
+        <br>
+        <label for="review">Review:</label>
+        <textarea id="review" rows="6"></textarea>
+        <br>
+        <button onclick="submitReview()">Submit Review</button>
+        <button onclick="calculateSentiment()">Analyze Sentiment</button>
+        <br>
+        <img id="sentimentGraph" src="static\sentiment_plot.png" alt="Sentiment Graph">
+    </div>
+
+    <script>
+        function submitReview() {
+            var brand = document.getElementById("brand").value;
+            var review = document.getElementById("review").value;
+
+            // Construct the data object
+            var data = {
+                brand: brand,
+                review: review
+            };
+
+            // Send the data to the backend Flask server
+            fetch('/submit-review', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.message);
+                alert('Review submitted successfully'); // Show a success message
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while submitting the review'); // Show an error message
+            });
+            
+            // Reset the input fields
+            document.getElementById("review").value = "";
+        }
+
+        function calculateSentiment() {
+            fetch('/analyze-sentiment')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                var url = window.URL.createObjectURL(blob);
+                var img = document.getElementById('sentimentGraph');
+                img.src = url;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while calculating sentiment analysis');
+            });
+        }
+    </script>
+</body>
+</html>
